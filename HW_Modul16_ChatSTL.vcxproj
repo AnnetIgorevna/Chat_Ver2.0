@@ -24,6 +24,7 @@
     <ProjectGuid>{06c1892f-3427-4483-a390-49e84a72bd52}</ProjectGuid>
     <RootNamespace>HWModul16ChatSTL</RootNamespace>
     <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
+    <ProjectName>Chat_Ver2.0</ProjectName>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">

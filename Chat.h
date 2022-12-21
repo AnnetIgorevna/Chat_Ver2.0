@@ -4,6 +4,8 @@
 #include <unordered_map>
 #include <exception>
 #include <memory>
+#include <iostream>
+#include <string>
 
 #include "Message.h"
 
@@ -41,6 +43,9 @@ private:
 	int hash_func(const std::string& login, int offset);
 	int hf_multiply(int val);
 	void showAllUsersLogin(); // показать всех пользователей, зарегистрованных в чате
-	
+	void showChat(); // показать все сообщения в чате
+	void addMessage(); // написать сообщение всем / конкретному пользователю
+	void changePassword(); // изменение пароля текущего пользователя
+
 	std::shared_ptr<User> getUserByLogin(const std::string& login) const; // найти пользователя по логину
 };

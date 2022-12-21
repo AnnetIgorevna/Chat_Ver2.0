@@ -1,5 +1,6 @@
 #include "Chat.h"
 
+
 void Chat::showLoginMenu()
 {
 	_currentUser = nullptr;
@@ -52,13 +53,13 @@ void Chat::showUserMenu()
 			showAllUsersLogin();
 			break;
 		case '2':
-			//showChat();
+			showChat();
 			break;
 		case '3':
-			//addMessage();
+			addMessage();
 			break;
 		case '4':
-			//changePassword();
+			changePassword();
 			break;
 		case '5':
 			_currentUser = nullptr;
@@ -89,29 +90,36 @@ void Chat::logIn()
 		}
 		else
 		{
-			std::cout << "Enter your password: " << std::endl;
-			std::cin >> password;
-			for (size_t i = 0; i < _mem_size; i++)
+			bool passwordOk = false;
+			do
 			{
-				int index = hash_func(login, i);
-				std::unordered_map<int, User>::iterator it = _users.find(index);
-				uint* PasHash = sha1(password.c_str(), password.length());
-				if (!memcmp(it->second.getUserPassword(), PasHash, SHA1HASHLENGTHBYTES))
+				std::cout << "Enter your password: " << std::endl;
+				std::cin >> password;
+				for (size_t i = 0; i < _mem_size; i++)
 				{
-					std::cout << "Hello " << it->second.getUserLogin() << "!" << std::endl;
-					delete[] PasHash;
-				}
-				else
-				{
-					std::cout << "The password entered is incorrect. To exit press 0, to continue press any key:" << std::endl;
-					std::cin >> operation;
-					if (operation == "0")
+					int index = hash_func(login, i);
+					std::unordered_map<int, User>::iterator it = _users.find(index);
+					uint* PasHash = sha1(password.c_str(), password.length());
+					if (!memcmp(it->second.getUserPassword(), PasHash, SHA1HASHLENGTHBYTES))
 					{
-						_currentUser = nullptr;
-						return;
+						std::cout << "Hello " << it->second.getUserLogin() << "!" << std::endl;
+						passwordOk = true;
+						delete[] PasHash;
+						break;
+					}
+					else
+					{
+						std::cout << "The password entered is incorrect. To exit press 0, to continue press any key:" << std::endl;
+						std::cin >> operation;
+						if (operation == "0")
+						{
+							_currentUser = nullptr;
+							return;
+						}
+						break;
 					}
 				}
-			}
+			} while (!passwordOk);
 		}
 	} while (!_currentUser);
 }
@@ -153,7 +161,7 @@ void Chat::addUser(std::string login, uint* password)
 	for (; i < _mem_size; i++) {
 		index = hash_func(login, i);
 		std::unordered_map<int, User>::iterator it = _users.find(index);
-		if (!_users.size() || it->second.getUserStatus() == 0)
+		if (it == _users.end() || !_users.size() || it->second.getUserStatus() == 0)
 			break;
 	}
 	if (i >= _mem_size)
@@ -190,7 +198,7 @@ std::shared_ptr<User> Chat::getUserByLogin(const std::string& login) const
 	{
 		if (login == user.second.getUserLogin())
 		{
-			return std::make_shared<User>(user);
+			return std::make_shared<User>(user.second);
 		}
 	}
 	return nullptr;
@@ -198,4 +206,97 @@ std::shared_ptr<User> Chat::getUserByLogin(const std::string& login) const
 
 void Chat::showAllUsersLogin()
 {
+	std::cout << "\n*** All users in this Chat ***" << std::endl;
+
+	for (auto& user : _users)
+	{
+		if (_currentUser->getUserLogin() == user.second.getUserLogin())
+		{
+			std::cout << "Me";
+		}
+		else
+		{
+			std::cout << user.second.getUserLogin();
+		}
+		std::cout << std::endl;
+	}
+	std::cout << "******************************" << std::endl;
+}
+
+void Chat::showChat()
+{
+	std::string from, to;
+
+	if (!(_messages.size()))
+	{
+		std::cout << "It's no messages in this chat!" << std::endl;
+		return;
+	}
+	std::cout << "\n*** This is all messages in this chat ***" << std::endl;
+
+	for (auto& message : _messages)
+	{
+		//std::unordered_map<int, User>::iterator it = _users.find(getCurrentUser());
+		if (_currentUser->getUserLogin() == message.getFrom() || _currentUser->getUserLogin() == message.getTo() || message.getTo() == "all")
+		{
+			//std::unordered_map<int, User>::iterator it2 = _users.find(getUserByLogin(message.getFrom()));
+			from = (_currentUser->getUserLogin() == message.getFrom()) ? "Me" : getUserByLogin(message.getFrom())->getUserLogin();
+			if (message.getTo() == "all")
+			{
+				to = "all";
+			}
+			else
+			{
+				//std::unordered_map<int, User>::iterator it3 = _users.find(getUserByLogin(message.getTo()));
+				to = (_currentUser->getUserLogin() == message.getTo()) ? "Me" : getUserByLogin(message.getTo())->getUserLogin();
+			}
+			std::cout << "From: " << from << "\nTo: " << to << std::endl;
+			std::cout << "Text: " << message.getText() << std::endl << std::endl;
+		}
+	}
+	std::cout << "*** End of chat ***" << std::endl;
+}
+
+void Chat::addMessage()
+{
+	std::string to, text;
+
+	std::cout << "\nTo (login of user or all): " << std::endl;
+	std::cin >> to;
+	std::cout << "Enter the text: " << std::endl;
+	std::cin.ignore();
+	std::getline(std::cin, text);
+
+	if (!(to == "all" || getUserByLogin(to)))
+	{
+		std::cout << "Error send message: can't find user with name " << to << std::endl;
+		return;
+	}
+
+	if (to == "all")
+	{
+		_messages.push_back(Message{ _currentUser->getUserLogin(), "all", text });
+	}
+	else
+	{
+		_messages.push_back(Message{ _currentUser->getUserLogin(), getUserByLogin(to)->getUserLogin(), text });
+	}
+}
+
+void Chat::changePassword()
+{
+	std::string password;
+	std::cout << "Enter new password: " << std::endl;
+	std::cin >> password;
+	if (password.length() < 4 || password.length() > 8)
+		throw UserPasswordExp();
+	else
+	{
+		for (auto& user : _users)
+		{
+			uint* _pass_sha1_hash = sha1(password.c_str(), password.length());
+			if (_currentUser->getUserLogin() == user.second.getUserLogin())
+				user.second.setUserPassword(_pass_sha1_hash);
+		}
+	}
 }

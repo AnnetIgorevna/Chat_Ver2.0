@@ -15,10 +15,10 @@ public:
         _pass_sha1_hash(0),
         _status(enUserStatus::free) {}
 
-    //~User() {
-    //    if (_pass_sha1_hash != 0)
-    //        delete[] _pass_sha1_hash;
-    //}
+    ~User() {
+        //if (_pass_sha1_hash != 0)
+        //    delete[] _pass_sha1_hash;
+    }
 
     User(std::string& login, uint* sh1) {
         _login = login;
@@ -42,9 +42,10 @@ public:
     const std::string& getUserLogin() const { return _login; }
     int getUserStatus() { return _status; }
     uint* getUserPassword() const { return _pass_sha1_hash; }
+    void setUserPassword(uint* password) { memcpy(_pass_sha1_hash, password, SHA1HASHLENGTHBYTES); }
 
 private:
-	enUserStatus _status{free};
-    std::string _login{};
-    uint* _pass_sha1_hash{0};
+	enUserStatus _status;
+    std::string _login;
+    uint* _pass_sha1_hash;
 };
